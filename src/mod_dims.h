@@ -1,11 +1,11 @@
 /*
- * Copyright 2009 AOL LLC 
+ * Copyright 2009 AOL LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
- * the License at 
- *         
- *         http://www.apache.org/licenses/LICENSE-2.0 
+ * the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
@@ -58,11 +58,12 @@ typedef struct dims_client_config_rec dims_client_config_rec;
 typedef apr_status_t(dims_operation_func) (dims_request_rec *, char *args, char **err);
 void smartCrop(MagickWand *wand, int resolution, unsigned long cropWidth, unsigned long cropHeight);
 
-dims_operation_func 
+dims_operation_func
     dims_strip_operation,
     dims_normalize_operation,
     dims_flip_operation,
     dims_flop_operation,
+    dims_watermark_operation,
     dims_mirroredfloor_operation,
     dims_resize_operation,
     dims_extent_operation,
@@ -91,6 +92,7 @@ struct dims_config_rec {
     long no_image_expire;
     long default_expire;
     int strip_metadata;
+    char *watermark_path;
 
     MagickSizeType area_size;
     MagickSizeType memory_size;
@@ -106,6 +108,7 @@ struct dims_config_rec {
 struct dims_client_config_rec {
     char *id;
     char *no_image_url;
+    char *watermark_path;
     int cache_control_max_age;
     int edge_control_downstream_ttl;
     int trust_src;
@@ -130,6 +133,9 @@ struct dims_request_rec {
 
     /* The URL to the NOIMAGE image in case of failures. */
     char *no_image_url;
+
+    /* The path to the image to use if watermarking. */
+    char *watermark_path;
 
     /* The filename if this is a local request. */
     char *filename;
@@ -161,7 +167,7 @@ struct dims_request_rec {
     apr_time_t start_time;
     apr_time_t download_time;
     apr_time_t imagemagick_time;
-    
+
     /* Use a whitelist, or use a secret key passed on the URI */
     int use_secret_key;
 };

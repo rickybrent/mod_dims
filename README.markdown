@@ -41,9 +41,9 @@ In your /etc/init.d/httpd file on CentOS, before you start up anything, add the 
 
    export OMP_WAIT_POLICY=passive
 
-ImageMagick uses libgomp features, and in some cases, the default (active) wait policy can cause 
-thread starvation. Seen in CentOS 5.8 and likely also in 6.2. For references, see 
-http://gcc.gnu.org/onlinedocs/libgomp/OMP_005fWAIT_005fPOLICY.html#OMP_005fWAIT_005fPOLICY and 
+ImageMagick uses libgomp features, and in some cases, the default (active) wait policy can cause
+thread starvation. Seen in CentOS 5.8 and likely also in 6.2. For references, see
+http://gcc.gnu.org/onlinedocs/libgomp/OMP_005fWAIT_005fPOLICY.html#OMP_005fWAIT_005fPOLICY and
 http://comments.gmane.org/gmane.comp.gcc.bugs/277676
 
 
@@ -71,13 +71,14 @@ The following are commands implemented by this version:
 - sharpen
 - blur
 - format
+- watermark
 
 
 
 Errors
 ======
 
-There are three classes of errors in mod_dims; 
+There are three classes of errors in mod_dims;
 
 - Errors caused during downloading of a source image.  These
   come directly from libcurl and are logged as-is.
@@ -110,7 +111,7 @@ format `'', on request: /20080803WI55426251_WI.jpg/TEST/thumbnail/78x100/
 Common libcurl Error Messages:
 ------------------------------
 
-These message are usually self explanatory so no explain is provided.  The 
+These message are usually self explanatory so no explain is provided.  The
 URL that failed will be logged along with this message.
 
 * Couldn't connect to server
@@ -153,7 +154,7 @@ Other more serious errors:
 Any errors that have "Assertion failed" are results of bugs in the code and
 can be considered serious.
 
-- Assertion failed: (wand->signature == WandSignature), 
+- Assertion failed: (wand->signature == WandSignature),
   function MagickGetImageFormat, file wand/magick-image.c, line 4137.
 
 

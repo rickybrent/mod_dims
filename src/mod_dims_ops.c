@@ -1,11 +1,11 @@
 /*
- * Copyright 2009 AOL LLC 
+ * Copyright 2009 AOL LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
- * the License at 
- *         
- *         http://www.apache.org/licenses/LICENSE-2.0 
+ * the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
@@ -30,10 +30,10 @@
     do { \
         apr_status_t code = func; \
         if(rec->status == DIMS_IMAGEMAGICK_TIMEOUT) {\
-			wand = DestroyMagickWand(wand); \
+            wand = DestroyMagickWand(wand); \
             return DIMS_IMAGEMAGICK_TIMEOUT; \
         } else if(code == MagickFalse) {\
-			wand = DestroyMagickWand(wand); \
+            wand = DestroyMagickWand(wand); \
             return DIMS_FAILURE; \
         } \
     } while(0)
@@ -62,7 +62,7 @@ dims_smart_crop_operation (dims_request_rec *d, char *args, char **err) {
 apr_status_t
 dims_strip_operation (dims_request_rec *d, char *args, char **err) {
 
-    /* If args is passed from the user and 
+    /* If args is passed from the user and
      *   a) it equals true, strip the image.
      *   b) it equals false, don't strip the image.
      *   c) it is neither true/false, strip based on config value.
@@ -87,30 +87,52 @@ dims_normalize_operation (dims_request_rec *d, char *args, char **err) {
 }
 
 apr_status_t
+dims_watermark_operation (dims_request_rec *d, char *args, char **err) {
+    MagickWand *tmp = NewMagickWand();
+    if (!tmp) {
+        return DIMS_FAILURE;
+    }
+    if(MagickReadImage(tmp, d->watermark_path) == MagickFalse) {
+        ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, d->r,
+                "mod_dims error, 'Failed to load WATERMARK image from %s'",
+                d->watermark_path);
+        return 1;
+    }
+
+    int o_width  = MagickGetImageWidth(d->wand);
+    int o_height = MagickGetImageHeight(d->wand);
+    int w_width  = MagickGetImageWidth(tmp);
+    int w_height = MagickGetImageHeight(tmp);
+    MAGICK_CHECK_FREE_ON_FAIL(MagickCompositeImage(d->wand, tmp, OverCompositeOp, o_width - w_width, o_height - w_height), d, tmp);
+    tmp = DestroyMagickWand(tmp);
+    return DIMS_SUCCESS;
+}
+
+apr_status_t
 dims_mirroredfloor_operation (dims_request_rec *d, char *args, char **err) {
-	MagickWand *tmp = CloneMagickWand(d->wand);
-	if (!tmp) {
-		return DIMS_FAILURE;
-	}
+    MagickWand *tmp = CloneMagickWand(d->wand);
+    if (!tmp) {
+        return DIMS_FAILURE;
+    }
     MAGICK_CHECK_FREE_ON_FAIL(MagickFlipImage(tmp), d, tmp);
-	int width = MagickGetImageWidth(d->wand);
-	int height = MagickGetImageHeight(d->wand);
-	MAGICK_CHECK_FREE_ON_FAIL(MagickExtentImage(d->wand, width, height * 2, 0, 0), d, tmp);
-	MAGICK_CHECK_FREE_ON_FAIL(MagickCompositeImage(d->wand, tmp, OverCompositeOp, 0, height), d, tmp);
-	tmp = DestroyMagickWand(tmp);
-	return DIMS_SUCCESS;
+    int width = MagickGetImageWidth(d->wand);
+    int height = MagickGetImageHeight(d->wand);
+    MAGICK_CHECK_FREE_ON_FAIL(MagickExtentImage(d->wand, width, height * 2, 0, 0), d, tmp);
+    MAGICK_CHECK_FREE_ON_FAIL(MagickCompositeImage(d->wand, tmp, OverCompositeOp, 0, height), d, tmp);
+    tmp = DestroyMagickWand(tmp);
+    return DIMS_SUCCESS;
 }
 
 apr_status_t
 dims_flip_operation (dims_request_rec *d, char *args, char **err) {
-	MAGICK_CHECK(MagickFlipImage(d->wand), d);
-	return DIMS_SUCCESS;
+    MAGICK_CHECK(MagickFlipImage(d->wand), d);
+    return DIMS_SUCCESS;
 }
 
 apr_status_t
 dims_flop_operation (dims_request_rec *d, char *args, char **err) {
-	MAGICK_CHECK(MagickFlopImage(d->wand), d);
-	return DIMS_SUCCESS;
+    MAGICK_CHECK(MagickFlopImage(d->wand), d);
+    return DIMS_SUCCESS;
 }
 
 apr_status_t
@@ -176,13 +198,13 @@ dims_extent_operation (dims_request_rec *d, char *args, char **err) {
     }
 
     ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, d->r, "Extent offset: rec.x=%d rec.y=%d rec.width=%d rec.height=%d",(int)rec.x,(int)rec.y,(int) rec.width,(int)rec.height);
-    
+
     MAGICK_CHECK(MagickExtentImage(d->wand, rec.width, rec.height, rec.x, rec.y ), d);
 
     return DIMS_SUCCESS;
 }
 
-apr_status_t 
+apr_status_t
 dims_gravity_operation (dims_request_rec *d, char *args, char **err) {
   MagickStatusType flags;
     RectangleInfo rec;
@@ -215,12 +237,12 @@ dims_background_operation (dims_request_rec *d, char *args, char **err) {
     code = MagickSetImageBackgroundColor(d->wand,p_wand);
     p_wand = DestroyPixelWand(p_wand);
 
-    if(d->status == DIMS_IMAGEMAGICK_TIMEOUT) {    
-      return DIMS_IMAGEMAGICK_TIMEOUT;	
+    if(d->status == DIMS_IMAGEMAGICK_TIMEOUT) {
+      return DIMS_IMAGEMAGICK_TIMEOUT;
     } else if(code == MagickFalse) {
       return DIMS_FAILURE;
     }
-    
+
 
     return DIMS_SUCCESS;
 }
@@ -263,7 +285,7 @@ dims_thumbnail_operation (dims_request_rec *d, char *args, char **err) {
 
         MAGICK_CHECK(MagickCropImage(d->wand, rec2.width, rec2.height, (int)((rec.width - rec2.width) / 2), (int)((rec.height - rec2.height) / 2)), d);
     }
-    
+
     return DIMS_SUCCESS;
 }
 
@@ -315,7 +337,7 @@ dims_blur_operation (dims_request_rec *d, char *args, char **err) {
 
     return DIMS_SUCCESS;
 }
-	
+
 
 /**
  * Legacy API support.
@@ -340,8 +362,8 @@ dims_legacy_crop_operation (dims_request_rec *d, char *args, char **err) {
     x = (width / 2) - (rec.width / 2);
     y = (height / 2) - (rec.height / 2);
 
-    ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, d->r, 
-        "legacy_crop will crop to %ldx%ld+%d+%d", 
+    ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, d->r,
+        "legacy_crop will crop to %ldx%ld+%d+%d",
         rec.width, rec.height, x, y);
 
     MAGICK_CHECK(MagickCropImage(d->wand, rec.width, rec.height, x, y), d);
@@ -369,7 +391,7 @@ dims_legacy_thumbnail_operation (dims_request_rec *d, char *args, char **err) {
         MAGICK_CHECK(MagickScaleImage(d->wand, rec.width, rec.height), d);
     }
 
-    ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, d->r, 
+    ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, d->r,
         "legacy_thumbnail will resize to %ldx%ld", rec.width, rec.height);
 
     flags = ParseAbsoluteGeometry(args, &rec);
@@ -383,7 +405,7 @@ dims_legacy_thumbnail_operation (dims_request_rec *d, char *args, char **err) {
     x = (width / 2) - (rec.width / 2);
     y = (height / 2) - (rec.height / 2);
 
-    ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, d->r, 
+    ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, d->r,
         "legacy_thumbnail will crop to %ldx%ld+%d+%d", rec.width, rec.height, x, y);
 
     MAGICK_CHECK(MagickCropImage(d->wand, rec.width, rec.height, x, y), d);
