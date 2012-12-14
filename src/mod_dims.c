@@ -495,8 +495,8 @@ dims_fetch_remote_image(dims_request_rec *d, const char *url)
     ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, d->r,
             "Loading image from %s", fetch_url);
 
-    /* Allow file:/// references for NOIMAGE urls. */
-    if(url == NULL && strncmp(fetch_url, "file:///", 8) == 0) {
+    /* Allow file:/// references  */
+    if(strncmp(fetch_url, "file:///", 8) == 0) {
         char *filename = fetch_url + 7;
         apr_finfo_t finfo;
         apr_status_t status;
@@ -1154,7 +1154,7 @@ dims_handle_request(dims_request_rec *d)
             }
         }
 
-        if(found) {
+        if(found || strlen(uri.hostname) == 0) {
             fetch_url = d->image_url;
         } else {
             ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, d->r,
@@ -1294,6 +1294,10 @@ dims_handler(request_rec *r)
 
         /* HACK: If URL has "http:/" instead of "http://", correct it. */
         url = strstr(r->uri, "http:/");
+        if(!url){
+            url = strstr(r->uri, "file:/");
+        }
+
         if(url && *(url + 6) != '/') {
             fixed_url = apr_psprintf(r->pool, "http://%s", url + 6);
         } else if(!url) {
@@ -1383,6 +1387,9 @@ dims_handler(request_rec *r)
         commands = apr_pstrdup(r->pool, r->uri);
         if(fixed_url == NULL) {
             url = strstr(r->uri, "http:/");
+            if(!url){
+                url = strstr(r->uri, "file:/");
+            }
             if(url && *(url + 6) != '/') {
                 fixed_url = apr_psprintf(r->pool, "http://%s", url + 6);
             } else if(!url) {
@@ -1393,6 +1400,9 @@ dims_handler(request_rec *r)
 
             /* Strip URL off URI.  This leaves only the tranformation parameters. */
             p = strstr(commands, "http:/");
+            if(!p) {
+                p = strstr(commands, "file:/");
+            }
             if(!p) return dims_cleanup(d, NULL, DIMS_BAD_URL);
             *p = '\0';
         }
