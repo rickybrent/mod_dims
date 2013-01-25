@@ -92,11 +92,23 @@ dims_watermark_operation (dims_request_rec *d, char *args, char **err) {
     if (!tmp) {
         return DIMS_FAILURE;
     }
-    if(MagickReadImage(tmp, d->watermark_path) == MagickFalse) {
-        ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, d->r,
-                "mod_dims error, 'Failed to load WATERMARK image from %s'",
-                d->watermark_path);
-        return 1;
+     // If args is NULL, watermark based on config value.
+    char *watermark_path;
+    if(args == NULL) {
+        watermark_path = apr_pstrdup(d->pool, d->watermark_path);
+    } else {
+        watermark_path = apr_pstrdup(d->pool, args);
+    }
+    ap_unescape_url(watermark_path);
+
+    if(MagickReadImage(tmp, watermark_path) == MagickFalse) {
+        // try the default:
+        if(MagickReadImage(tmp, d->watermark_path) == MagickFalse) {
+            ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, d->r,
+                    "mod_dims error, 'Failed to load WATERMARK image from %s'",
+                    watermark_path);
+            return DIMS_SUCCESS; // continue anyway.
+        }
     }
 
     int o_width  = MagickGetImageWidth(d->wand);

@@ -1690,7 +1690,7 @@ static const command_rec dims_commands[] =
                   "The default is 128mb."),
     AP_INIT_TAKE1("DimsWatermarkPath",
                   dims_config_set_watermark_path, NULL, RSRC_CONF,
-                  "Path to image to use as watermark during watermarking."),
+                  "Default path to image to use as watermark during watermarking."),
     AP_INIT_TAKE1("DimsImagemagickMapSize",
                   dims_config_set_imagemagick_map_size, NULL, RSRC_CONF,
                   "Maximum amount of memory map in megabytes to use for the pixel cache."
